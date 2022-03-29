@@ -1,5 +1,9 @@
 use std::fmt;
 
+#[cfg(test)]
+#[path="./cpu_test.rs"]
+mod cpu_test;
+
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
 enum AddressingMode {
@@ -162,6 +166,27 @@ impl CPU {
 
         // set RESET vector address into PC
         self.pc = rs6502::RESET_VEC;
+    }
+
+    pub fn mount_mem(&mut self, address : u16, data : &[u8]){
+
+        if (address as usize) + data.len() > self.mem.len() {
+            println!("[-] Data does not fit in the memory for the given address");
+            return;
+        }
+
+        for i in 0..data.len(){
+            self.mem[(address as usize) + i] = data[i].clone();
+        }
+    }
+
+    // TODO: rewrite this so it returns Option<&u8> to make error handling possible
+    pub fn read_mem(&self, address : u16) -> &u8 {
+        if (address as usize) >= rs6502::MAX_MEM {
+            println!("[-] Address out of bounds");
+            return &0;
+        }
+        return &self.mem[address as usize];
     }
 }
 
@@ -427,3 +452,5 @@ const INSTRUCTION_MATRIX : [Instruction; rs6502::NUM_INSTR] = [
     /* FE */Instruction{ mnem : InstructionMnemonic::InstrINC , length : 3, cycles : 7, mode : AddressingMode::AddrModeABSX},
     /* FF */INSTRUCTION_UNDEFINED,
 ];
+
+
